@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  api:
+    build: ./backend
+    ports:
+      - '3001:3001'
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/carsdb
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+    command: node index.js
+    profiles:
+      - api
+      - full
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: carsdb
+    volumes:
+      - ./backend/db:/docker-entrypoint-initdb.d
+    ports:
+      - '5432:5432'
+    profiles:
+      - db
+      - full
+
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    environment:
+      - API_URL=http://api:3001
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app
+    command: npm run dev
+    profiles:
+      - front
+      - full
